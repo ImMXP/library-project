@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UniLib – Prototype Tests</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  #results{position:fixed;inset:0;background:#fff;overflow:auto;padding:24px;z-index:10}
+  #results li{margin:6px 0}
+  .pass{color:#15803d;font-weight:600}.fail{color:#b91c1c;font-weight:600}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+<div id="results"><h1>UniLib prototype – automated UI tests</h1><ul id="list"></ul><p id="sum"></p></div>
+<script>
+  // Start every run from clean seed data.
+  try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+  window.confirm = () => true;
+</script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+const results = [];
+function check(id, name, fn) {
+  let ok = false, msg = "";
+  try { ok = !!fn(); } catch (e) { msg = e.message; }
+  results.push({ id, name, ok });
+  const li = document.createElement("li");
+  li.innerHTML = `<span class="${ok ? "pass" : "fail"}">${ok ? "PASS" : "FAIL"}</span> ${id} – ${name} ${msg}`;
+  document.getElementById("list").appendChild(li);
+}
+const q = s => document.querySelector(s);
+const qa = s => [...document.querySelectorAll(s)];
+function login(role, u, p) {
+  setSession(null); location.hash = ""; route();
+  loginRole = role; renderLogin();
+  q("#u").value = u; q("#p").value = p;
+  q("#lf").dispatchEvent(new Event("submit", { cancelable: true }));
+}
+function go(h) { location.hash = h; route(); }
+function submit(form, values) { Object.entries(values).forEach(([k, v]) => form.elements[k].value = v); form.dispatchEvent(new Event("submit", { cancelable: true })); }
+
+check("TC-01", "Borrower logs in with valid demo account", () => {
+  login("borrower", "s441001", "1234");
+  return q("main h1").textContent === "Browse books" && q(".role").textContent === "Borrower";
+});
+check("TC-02", "Wrong password shows error and stays on login", () => {
+  login("borrower", "s441001", "wrong");
+  return q("#err").textContent.includes("Invalid") && !q("main");
+});
+check("TC-03", "Admin logs in through the Administrator tab", () => {
+  login("admin", "admin", "admin123");
+  return q("main h1").textContent === "Dashboard" && q(".role").textContent === "Admin";
+});
+check("TC-04", "Borrower searches the catalog by title", () => {
+  login("borrower", "s441001", "1234");
+  q("#q").value = "clean"; q("#q").dispatchEvent(new Event("input"));
+  return qa(".book").length === 1 && q(".book .t").textContent === "Clean Code";
+});
+check("TC-05", "Borrower requests a book and sees it in My loans", () => {
+  q("#q").value = "algorithms"; q("#q").dispatchEvent(new Event("input"));
+  q("[data-b]").click();
+  const btn = q("[data-b]");
+  go("#/me/loans");
+  const rows = qa("main table tr").map(r => r.textContent);
+  return btn.disabled && btn.textContent === "Requested" && rows.some(t => t.includes("Introduction to Algorithms") && t.includes("Requested"));
+});
+check("TC-06", "Admin adds, edits and cannot delete a book with active loans", () => {
+  login("admin", "admin", "admin123"); go("#/admin/books");
+  submit(q("#bf"), { title: "Test Book", author: "QA Team", category: "Testing", copies: 2 });
+  const added = qa("#bt tr").some(r => r.textContent.includes("Test Book"));
+  const row = qa("#bt tr").find(r => r.textContent.includes("Test Book"));
+  row.querySelector("[data-e]").click();
+  submit(q("#bf"), { title: "Test Book v2" });
+  const edited = qa("#bt tr").some(r => r.textContent.includes("Test Book v2"));
+  const before = db.books.length;
+  qa("#bt tr").find(r => r.textContent.includes("Software Engineering")).querySelector("[data-d]").click();
+  const blocked = db.books.length === before;
+  qa("#bt tr").find(r => r.textContent.includes("Test Book v2")).querySelector("[data-d]").click();
+  return added && edited && blocked && db.books.length === before - 1;
+});
+check("TC-07", "Admin registers a borrower; duplicate student ID is rejected", () => {
+  go("#/admin/borrowers");
+  const n = db.borrowers.length;
+  submit(q("#rf"), { name: "Test Student", studentId: "441999", email: "t@uni.edu.sa", phone: "0500000009" });
+  const added = db.borrowers.length === n + 1 && q("#rt").textContent.includes("Test Student");
+  submit(q("#rf"), { name: "Copy", studentId: "441999", email: "c@uni.edu.sa", phone: "0500000010" });
+  return added && db.borrowers.length === n + 1;
+});
+check("TC-08", "Admin approves a request (due in 14 days) and records the return", () => {
+  go("#/admin/loans");
+  const loan = db.loans.find(l => l.status === "Requested" && book(l.bookId).title === "Clean Code");
+  q(`[data-a="${loan.id}"]`).click();
+  const approved = loan.status === "Borrowed" && loan.due === addDays(today(), 14);
+  q(`[data-ret="${loan.id}"]`).click();
+  return approved && loan.status === "Returned";
+});
+check("TC-09", "Dashboard counts match the loan data", () => {
+  go("#/admin/dashboard");
+  const n = qa(".stat .n").map(x => +x.textContent);
+  return n[0] === db.books.length && n[1] === db.loans.filter(l => l.status === "Borrowed").length
+    && n[2] === db.loans.filter(l => l.status === "Requested").length && n[3] === db.loans.filter(isOverdue).length;
+});
+check("TC-10", "Borrower cannot open admin pages", () => {
+  login("borrower", "s441001", "1234"); go("#/admin/books");
+  return q("main h1").textContent === "Browse books";
+});
+
+const passed = results.filter(r => r.ok).length;
+document.getElementById("sum").textContent = `${passed} / ${results.length} tests passed`;
+document.title = `${passed}/${results.length} passed`;
+try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+</script>
+</body>
+</html>
