@@ -38,27 +38,48 @@ function statusPill(l) {
 
 // ---------- Login ----------
 let loginRole = "borrower";
+const LI = {
+  user: `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>`,
+  lock: `<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
+  eye: `<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  arrow: `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`,
+  ext: `<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`,
+  info: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`
+};
 function renderLogin() {
+  const adm = loginRole === "admin";
   $("#app").innerHTML = `
-  <div class="login-wrap"><div class="login">
-    <div class="logo"><span class="mark">U</span>UniLib</div>
-    <p class="sub">University Library Borrowing System</p>
-    <div class="tabs">
-      <button data-r="borrower" class="${loginRole === "borrower" ? "on" : ""}">Borrower</button>
-      <button data-r="admin" class="${loginRole === "admin" ? "on" : ""}">Administrator</button>
-    </div>
-    <form id="lf">
-      <label>${loginRole === "admin" ? "Admin username" : "Student ID"}</label>
-      <input id="u" autocomplete="username" placeholder="${loginRole === "admin" ? "admin" : "s441001"}">
-      <label>Password</label>
-      <input id="p" type="password" autocomplete="current-password" placeholder="••••">
-      <div class="err" id="err"></div>
-      <button class="btn" style="width:100%">Sign in</button>
-    </form>
-    <div class="hint">Prototype demo accounts:<br>
-      ${loginRole === "admin" ? "admin / admin123" : "s441001 / 1234 &nbsp;·&nbsp; s441002 / 1234"}</div>
-  </div></div>`;
-  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { loginRole = b.dataset.r; renderLogin(); });
+  <div class="gp">
+    <div class="gp-strip"><div class="gp-in"><span><i class="gp-flag"></i>An official service of Umm Al-Qura University</span><span>English</span></div></div>
+    <header class="gp-head"><div class="gp-in">
+      <div class="gp-brand"><img class="gp-mark" src="assets/uqu-logo.png" alt="Umm Al-Qura University logo"><div><b>UniLib</b><small>Umm Al-Qura University Library</small></div></div>
+      <a class="gp-link" href="https://uqu.edu.sa" target="_blank" rel="noopener">Library website ${LI.ext}</a>
+    </div></header>
+    <div class="gp-main"><div class="gp-card">
+      <img class="gp-icon" src="assets/uqu-logo.png" alt="">
+      <h1>Sign in to UniLib</h1>
+      <p class="gp-sub">University Library Borrowing System</p>
+      <div class="gp-tabs" role="tablist">
+        <button type="button" data-r="borrower" class="${adm ? "" : "on"}">${LI.user}Borrower</button>
+        <button type="button" data-r="admin" class="${adm ? "on" : ""}">${LI.shield}Administrator</button>
+      </div>
+      <form id="lf">
+        <label for="u">${adm ? "Admin username" : "Student ID"}</label>
+        <div class="gp-field">${LI.user}<input id="u" autocomplete="username" placeholder="${adm ? "admin" : "s441001"}"></div>
+        <label for="p">Password</label>
+        <div class="gp-field">${LI.lock}<input id="p" type="password" autocomplete="current-password" placeholder="••••••••">
+          <button type="button" class="gp-eye" aria-label="Show password">${LI.eye}</button></div>
+        <div class="err" id="err"></div>
+        <button class="gp-btn">Sign in ${LI.arrow}</button>
+      </form>
+      <div class="gp-note">${LI.info}<div><b>Prototype demo accounts</b>
+        ${adm ? "admin / admin123" : "s441001 / 1234 &nbsp;·&nbsp; s441002 / 1234"}</div></div>
+    </div></div>
+    <footer class="gp-foot"><div class="gp-in"><span>© 2026 Umm Al-Qura University. All rights reserved.</span><b>UniLib · University Library Borrowing</b></div></footer>
+  </div>`;
+  document.querySelectorAll(".gp-tabs button").forEach(b => b.onclick = () => { loginRole = b.dataset.r; renderLogin(); });
+  $(".gp-eye").onclick = () => { const p = $("#p"); p.type = p.type === "password" ? "text" : "password"; };
   $("#lf").onsubmit = e => {
     e.preventDefault();
     const acc = DEMO_ACCOUNTS.find(a => a.username === $("#u").value.trim() && a.password === $("#p").value && a.role === loginRole);
