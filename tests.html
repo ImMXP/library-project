@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UniLib – Prototype Tests</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/style.css">
 <style>
   #results{position:fixed;inset:0;background:#fff;overflow:auto;padding:24px;z-index:10}
   #results li{margin:6px 0}
@@ -20,8 +20,8 @@
   try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
   window.confirm = () => true;
 </script>
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
 <script>
 const results = [];
 function check(id, name, fn) {
