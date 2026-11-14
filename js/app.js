@@ -93,14 +93,23 @@ function renderLogin() {
 // ---------- Shell ----------
 function shell(user, links, current, body) {
   $("#app").innerHTML = `
-  <div class="top">
-    <div class="logo"><span class="mark">U</span>UniLib</div>
-    <div class="who"><span class="role">${user.role === "admin" ? "Admin" : "Borrower"}</span>${esc(user.name)}
-      <button class="btn ghost small" id="logout">Sign out</button></div>
-  </div>
-  <div class="shell">
-    <nav class="side">${links.map(([h, t]) => `<a href="#/${h}" class="${h === current ? "on" : ""}">${t}</a>`).join("")}</nav>
-    <main>${body}</main>
+  <div style="display:flex;flex-direction:column;min-height:100vh;">
+    <div class="top">
+      <div class="logo">
+        <img src="assets/uqu-logo.png" alt="UQU Logo">
+        <div class="logo-text">
+          <span class="title">UniLib</span>
+          <span class="sub">Umm Al-Qura University Library</span>
+        </div>
+      </div>
+      <div class="who"><span class="role">${user.role === "admin" ? "Admin" : "Borrower"}</span>${esc(user.name)}
+        <button class="btn ghost small" id="logout">Sign out</button></div>
+    </div>
+    <div class="shell" style="flex:1;">
+      <nav class="side">${links.map(([h, t]) => `<a href="#/${h}" class="${h === current ? "on" : ""}">${t}</a>`).join("")}</nav>
+      <main>${body}</main>
+    </div>
+    <footer class="gp-foot"><div class="gp-in"><span>© 2026 Umm Al-Qura University. All rights reserved.</span><b>UniLib · University Library Borrowing</b></div></footer>
   </div>`;
   $("#logout").onclick = () => { setSession(null); location.hash = ""; route(); };
 }
@@ -219,93 +228,44 @@ function adminLoans(u) {
 }
 
 // ---------- Borrower ----------
-// ---------- Borrower Views (Enhanced UI with Summary Cards) ----------
-const ME_LINKS = [
-  ["me/catalog", "Browse books"],
-  ["me/loans", "My loans"]
-];
+const ME_LINKS = [["me/catalog", "Browse books"], ["me/loans", "My loans"]];
 
-/**
- * Render Borrower Catalog view with summary stats, search, category filter, and borrow actions.
- */
 function meCatalog(u) {
   const cats = [...new Set(db.books.map(b => b.category))];
-  const myLoansList = db.loans.filter(l => l.borrowerId === u.borrowerId);
-  const activeCount = myLoansList.filter(l => l.status === "Borrowed").length;
-  const pendingCount = myLoansList.filter(l => l.status === "Requested").length;
-  const overdueCount = myLoansList.filter(isOverdue).length;
-
   shell(u, ME_LINKS, "me/catalog", `
     <h1>Browse books</h1><p class="lead">Search the catalog and request a book to borrow.</p>
-    
-    <!-- Quick Borrower Summary Cards -->
-    <div class="user-stats">
-      <div class="user-stat-card"><span>Active Loans</span><strong>${activeCount}</strong></div>
-      <div class="user-stat-card"><span>Pending Requests</span><strong>${pendingCount}</strong></div>
-      <div class="user-stat-card"><span>Overdue Books</span><strong style="${overdueCount > 0 ? "color:#b91c1c;" : ""}">${overdueCount}</strong></div>
-    </div>
-
-    <div class="bar">
-      <input id="q" placeholder="Search by title or author">
-      <select id="c"><option value="">All categories</option>${cats.map(c => `<option>${esc(c)}</option>`).join("")}</select>
-    </div>
+    <div class="bar"><input id="q" placeholder="Search by title or author">
+      <select id="c"><option value="">All categories</option>${cats.map(c => `<option>${esc(c)}</option>`).join("")}</select></div>
     <div class="books" id="bk"></div>`);
-
   const draw = () => {
     const q = $("#q").value.toLowerCase(), c = $("#c").value;
     const rows = db.books.filter(b => (b.title + b.author).toLowerCase().includes(q) && (!c || b.category === c));
-    
-    $("#bk").innerHTML = rows.length ? rows.map(b => {
+    $("#bk").innerHTML = rows.length ? rows.map((b, i) => {
       const av = available(b);
       const mine = db.loans.some(l => l.bookId === b.id && l.borrowerId === u.borrowerId && (l.status === "Requested" || l.status === "Borrowed"));
-      return `<div class="card book">
-        <div class="cover" style="background:${COLORS[db.books.indexOf(b) % COLORS.length]}">${esc(b.title[0])}</div>
-        <div class="t">${esc(b.title)}</div>
-        <div class="a">${esc(b.author)} · ${esc(b.category)}</div>
-        <div class="row">
-          <span class="pill ${av > 0 ? "p-ok" : "p-bad"}">${av > 0 ? av + " available" : "Unavailable"}</span>
-          <button class="btn small" data-b="${b.id}" ${av < 1 || mine ? "disabled" : ""}>${mine ? "Requested" : "Borrow"}</button>
-        </div>
-      </div>`;
+      return `<div class="card book"><div class="cover" style="background:${COLORS[db.books.indexOf(b) % COLORS.length]}">${esc(b.title[0])}</div>
+        <div class="t">${esc(b.title)}</div><div class="a">${esc(b.author)} · ${esc(b.category)}</div>
+        <div class="row"><span class="pill ${av > 0 ? "p-ok" : "p-bad"}">${av > 0 ? av + " available" : "Unavailable"}</span>
+        <button class="btn small" data-b="${b.id}" ${av < 1 || mine ? "disabled" : ""}>${mine ? "Requested" : "Borrow"}</button></div></div>`;
     }).join("") : `<div class="card empty">No books match your search.</div>`;
-
-    // Handle borrow request button click
     document.querySelectorAll("[data-b]").forEach(x => x.onclick = () => {
       db.loans.push({ id: uid("L"), bookId: x.dataset.b, borrowerId: u.borrowerId, requested: today(), due: "", status: "Requested" });
       save(); draw(); toast("Borrow request sent to the library");
     });
   };
-
-  $("#q").oninput = draw; 
-  $("#c").onchange = draw; 
-  draw();
+  $("#q").oninput = draw; $("#c").onchange = draw; draw();
 }
 
-/**
- * Render Borrower Loans view with summary stats and active records.
- */
 function meLoans(u) {
   const mine = db.loans.filter(l => l.borrowerId === u.borrowerId).reverse();
-  const activeCount = mine.filter(l => l.status === "Borrowed").length;
-  const pendingCount = mine.filter(l => l.status === "Requested").length;
-  const overdueCount = mine.filter(isOverdue).length;
-
   shell(u, ME_LINKS, "me/loans", `
     <h1>My loans</h1><p class="lead">Your requests, borrowed books and due dates.</p>
-    
-    <!-- Quick Borrower Summary Cards -->
-    <div class="user-stats">
-      <div class="user-stat-card"><span>Active Borrowed</span><strong>${activeCount}</strong></div>
-      <div class="user-stat-card"><span>Pending Requests</span><strong>${pendingCount}</strong></div>
-      <div class="user-stat-card"><span>Overdue Records</span><strong style="${overdueCount > 0 ? "color:#b91c1c;" : ""}">${overdueCount}</strong></div>
-    </div>
-
-    ${mine.length ? `<table>
-      <tr><th>Book</th><th>Requested</th><th>Due date</th><th>Status</th></tr>
-      ${mine.map(l => `<tr><td>${esc(book(l.bookId)?.title)}</td><td>${l.requested}</td><td>${l.due || "—"}</td><td>${statusPill(l)}</td></tr>`).join("")}
-    </table>` : `<div class="card empty">You have no loans yet.</div>`}`);
+    ${mine.length ? `<table><tr><th>Book</th><th>Requested</th><th>Due date</th><th>Status</th></tr>
+      ${mine.map(l => `<tr><td>${esc(book(l.bookId)?.title)}</td><td>${l.requested}</td><td>${l.due || "—"}</td><td>${statusPill(l)}</td></tr>`).join("")}</table>`
+      : `<div class="card empty">You have no loans yet.</div>`}`);
 }
-// ---------- Router --------
+
+// ---------- Router ----------
 const ROUTES = {
   admin: { "admin/dashboard": adminDashboard, "admin/books": adminBooks, "admin/borrowers": adminBorrowers, "admin/loans": adminLoans },
   borrower: { "me/catalog": meCatalog, "me/loans": meLoans }
