@@ -305,7 +305,7 @@ function meLoans(u) {
       ${mine.map(l => `<tr><td>${esc(book(l.bookId)?.title)}</td><td>${l.requested}</td><td>${l.due || "—"}</td><td>${statusPill(l)}</td></tr>`).join("")}
     </table>` : `<div class="card empty">You have no loans yet.</div>`}`);
 }
-// ---------- Router ----------
+// ---------- Router --------
 const ROUTES = {
   admin: { "admin/dashboard": adminDashboard, "admin/books": adminBooks, "admin/borrowers": adminBorrowers, "admin/loans": adminLoans },
   borrower: { "me/catalog": meCatalog, "me/loans": meLoans }
