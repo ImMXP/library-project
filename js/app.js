@@ -105,51 +105,113 @@ function shell(user, links, current, body) {
   $("#logout").onclick = () => { setSession(null); location.hash = ""; route(); };
 }
 
-// ---------- Admin ----------
-const ADMIN_LINKS = [["admin/dashboard", "Dashboard"], ["admin/books", "Books"], ["admin/borrowers", "Borrowers"], ["admin/loans", "Loans"]];
+// ---------- Admin (UQU portal style, scoped under .adm) ----------
+const AI = {
+  dash: `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+  book: `<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>`,
+  users: `<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>`,
+  swap: `<svg viewBox="0 0 24 24"><path d="M7 4v16M3 8l4-4 4 4"/><path d="M17 20V4M13 16l4 4 4-4"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+  alert: `<svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17h.01"/></svg>`,
+  out: `<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>`,
+  search: `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
+  plus: `<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>`,
+  chev: `<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>`,
+  check: `<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>`
+};
+const ADMIN_LINKS = [["admin/dashboard", "Dashboard", "dash"], ["admin/books", "Books", "book"], ["admin/borrowers", "Borrowers", "users"], ["admin/loans", "Loans", "swap"]];
+const initials = n => String(n || "").split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+const daysLate = l => Math.round((new Date(today()) - new Date(l.due)) / 864e5);
+let loanFilter = "";
+
+function adminShell(u, current, title, lead, body) {
+  const pending = db.loans.filter(l => l.status === "Requested").length;
+  $("#app").innerHTML = `
+  <div class="gp adm">
+    <div class="gp-strip"><div class="gp-in"><span><i class="gp-flag"></i>An official service of Umm Al-Qura University</span><span>English</span></div></div>
+    <header class="gp-head"><div class="gp-in">
+      <div class="gp-brand"><img class="gp-mark" src="assets/uqu-logo.png" alt="Umm Al-Qura University logo"><div><b>UniLib</b><small>Library Administration</small></div></div>
+      <div class="adm-who"><span class="adm-av" aria-hidden="true">${esc(initials(u.name))}</span>
+        <div class="adm-id"><b>${esc(u.name)}</b><span class="role">Admin</span></div>
+        <button type="button" class="gp-link" id="logout">${AI.out}Sign out</button></div>
+    </div></header>
+    <nav class="adm-nav" aria-label="Administration"><div class="gp-in">
+      ${ADMIN_LINKS.map(([h, t, i]) => `<a href="#/${h}" class="${h === current ? "on" : ""}"${h === current ? ' aria-current="page"' : ""}>${AI[i]}${t}${h === "admin/loans" && pending ? `<em title="Pending requests">${pending}</em>` : ""}</a>`).join("")}
+    </div></nav>
+    <main>
+      <section class="adm-hero"><div class="adm-in">
+        <div class="adm-crumb">Admin portal ${AI.chev} ${title}</div>
+        <h1>${title}</h1><p>${lead}</p>
+      </div></section>
+      <div class="adm-in adm-body">${body}</div>
+    </main>
+    <footer class="gp-foot"><div class="gp-in"><span>© 2026 Umm Al-Qura University. All rights reserved.</span><b>UniLib · Library Administration</b></div></footer>
+  </div>`;
+  $("#logout").onclick = () => { setSession(null); location.hash = ""; route(); };
+}
+
+const searchBox = (id, ph) => `<label class="adm-search">${AI.search}<input id="${id}" type="search" placeholder="${ph}" aria-label="${ph}"></label>`;
 
 function adminDashboard(u) {
   const borrowed = db.loans.filter(l => l.status === "Borrowed").length;
   const req = db.loans.filter(l => l.status === "Requested").length;
   const over = db.loans.filter(isOverdue).length;
   const recent = [...db.loans].reverse().slice(0, 5);
-  shell(u, ADMIN_LINKS, "admin/dashboard", `
-    <h1>Dashboard</h1><p class="lead">Overview of the library today.</p>
+  const attention = db.loans.filter(l => l.status === "Requested" || isOverdue(l)).sort((a, b) => isOverdue(b) - isOverdue(a));
+  const stat = (n, l, icon, cls, go, f) => `<button type="button" class="card stat ${cls}" data-go="${go}" data-f="${f}">
+      <span class="stat-ic">${AI[icon]}</span><span><span class="n">${n}</span><span class="l">${l}</span></span><span class="stat-go">${AI.chev}</span></button>`;
+  adminShell(u, "admin/dashboard", "Dashboard", "Overview of the library today.", `
     <div class="stats">
-      <div class="card stat"><div class="n">${db.books.length}</div><div class="l">Book titles</div></div>
-      <div class="card stat"><div class="n">${borrowed}</div><div class="l">Books on loan</div></div>
-      <div class="card stat"><div class="n">${req}</div><div class="l">Pending requests</div></div>
-      <div class="card stat"><div class="n" style="color:var(--bad)">${over}</div><div class="l">Overdue</div></div>
+      ${stat(db.books.length, "Book titles", "book", "", "admin/books", "")}
+      ${stat(borrowed, "Books on loan", "swap", "teal", "admin/loans", "Borrowed")}
+      ${stat(req, "Pending requests", "clock", "warn", "admin/loans", "Requested")}
+      ${stat(over, "Overdue", "alert", "bad", "admin/loans", "Overdue")}
     </div>
-    <h3>Recent activity</h3>
-    ${loanTable(recent, false)}`);
+    <div class="adm-grid">
+      <section><div class="sec"><h2>Recent activity</h2><a href="#/admin/loans">View all loans</a></div>${loanTable(recent, false)}</section>
+      <aside class="card att"><div class="sec"><h2>Needs attention</h2></div>
+        ${attention.length ? `<ul>${attention.slice(0, 6).map(l => {
+          const o = isOverdue(l);
+          return `<li><span class="att-ic ${o ? "bad" : "warn"}">${o ? AI.alert : AI.clock}</span>
+            <div class="att-t"><b>${esc(book(l.bookId)?.title || "—")}</b><small>${esc(borrower(l.borrowerId)?.name || "—")} · ${o ? `${daysLate(l)} days overdue` : `requested ${l.requested}`}</small></div></li>`;
+        }).join("")}</ul>` : `<p class="att-ok">${AI.check}All caught up. Nothing needs action.</p>`}
+        <a class="btn ghost small att-more" href="#/admin/loans">Open loans ${AI.chev}</a>
+      </aside>
+    </div>`);
+  document.querySelectorAll("[data-go]").forEach(x => x.onclick = () => { loanFilter = x.dataset.f; location.hash = "#/" + x.dataset.go; });
 }
 
 function adminBooks(u) {
-  shell(u, ADMIN_LINKS, "admin/books", `
-    <h1>Books</h1><p class="lead">Add, edit and remove books in the catalog.</p>
-    <form class="form card" id="bf">
-      <div><label>Title</label><input name="title" required></div>
-      <div><label>Author</label><input name="author" required></div>
-      <div><label>Category</label><input name="category" required></div>
-      <div><label>Copies</label><input name="copies" type="number" min="1" value="1" required></div>
-      <button class="btn" id="bsave">Add book</button>
+  const cats = [...new Set(db.books.map(b => b.category))];
+  adminShell(u, "admin/books", "Books", "Add, edit and remove books in the catalog.", `
+    <section class="card panel"><div class="sec"><h2 id="bft">Add a book</h2></div>
+    <form class="form" id="bf">
+      <div><label for="bf-t">Title</label><input id="bf-t" name="title" required></div>
+      <div><label for="bf-a">Author</label><input id="bf-a" name="author" required></div>
+      <div><label for="bf-c">Category</label><input id="bf-c" name="category" list="cats" required><datalist id="cats">${cats.map(c => `<option value="${esc(c)}">`).join("")}</datalist></div>
+      <div><label for="bf-n">Copies</label><input id="bf-n" name="copies" type="number" min="1" value="1" required></div>
+      <div class="form-btns"><button class="btn" id="bsave">${AI.plus}Add book</button><button type="button" class="btn ghost" id="bcancel" hidden>Cancel</button></div>
       <input type="hidden" name="id">
-    </form>
-    <div class="bar"><input id="q" placeholder="Search by title or author"></div>
+    </form></section>
+    <div class="sec"><h2>Catalog <span class="cnt" id="bcnt"></span></h2></div>
+    <div class="bar">${searchBox("q", "Search by title or author")}</div>
     <div id="bt"></div>`);
   const f = $("#bf").elements, form = $("#bf");
+  const resetForm = () => { form.reset(); f.id.value = ""; $("#bsave").innerHTML = `${AI.plus}Add book`; $("#bft").textContent = "Add a book"; $("#bcancel").hidden = true; };
   const draw = () => {
     const q = $("#q").value.toLowerCase();
     const rows = db.books.filter(b => (b.title + b.author).toLowerCase().includes(q));
-    $("#bt").innerHTML = rows.length ? `<table><tr><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Available</th><th></th></tr>
-      ${rows.map(b => `<tr><td>${esc(b.title)}</td><td>${esc(b.author)}</td><td>${esc(b.category)}</td><td>${b.copies}</td><td>${available(b)}</td>
-      <td class="actions"><button class="btn ghost small" data-e="${b.id}">Edit</button><button class="btn danger small" data-d="${b.id}">Delete</button></td></tr>`).join("")}</table>`
+    $("#bcnt").textContent = `${rows.length} of ${db.books.length}`;
+    $("#bt").innerHTML = rows.length ? `<div class="tbl"><table><tr><th>Title</th><th>Category</th><th>Copies</th><th>Available</th><th></th></tr>
+      ${rows.map(b => { const av = available(b); return `<tr><td><b>${esc(b.title)}</b><small>${esc(b.author)}</small></td><td>${esc(b.category)}</td><td>${b.copies}</td>
+      <td><span class="pill ${av > 0 ? "p-ok" : "p-bad"}">${av > 0 ? av + " available" : "None left"}</span></td>
+      <td class="actions"><button class="btn ghost small" data-e="${b.id}">Edit</button><button class="btn danger small" data-d="${b.id}">Delete</button></td></tr>`; }).join("")}</table></div>`
       : `<div class="card empty">No books match your search.</div>`;
     document.querySelectorAll("[data-e]").forEach(x => x.onclick = () => {
       const b = book(x.dataset.e);
       ["id", "title", "author", "category", "copies"].forEach(k => f[k].value = b[k]);
-      $("#bsave").textContent = "Save changes"; f.title.focus();
+      $("#bsave").textContent = "Save changes"; $("#bft").textContent = "Edit book"; $("#bcancel").hidden = false;
+      form.scrollIntoView({ behavior: "smooth", block: "center" }); f.title.focus();
     });
     document.querySelectorAll("[data-d]").forEach(x => x.onclick = () => {
       if (activeLoans(x.dataset.d)) return toast("Cannot delete: book has active loans.");
@@ -162,26 +224,34 @@ function adminBooks(u) {
     const data = { title: f.title.value.trim(), author: f.author.value.trim(), category: f.category.value.trim(), copies: +f.copies.value };
     if (f.id.value) { Object.assign(book(f.id.value), data); toast("Book updated"); }
     else { db.books.push({ id: uid("BK"), isbn: "", ...data }); toast("Book added"); }
-    save(); form.reset(); f.id.value = ""; $("#bsave").textContent = "Add book"; draw();
+    save(); resetForm(); draw();
   };
+  $("#bcancel").onclick = resetForm;
   $("#q").oninput = draw; draw();
 }
 
 function adminBorrowers(u) {
-  shell(u, ADMIN_LINKS, "admin/borrowers", `
-    <h1>Borrowers</h1><p class="lead">Register students who can borrow books.</p>
-    <form class="form card" id="rf">
-      <div><label>Full name</label><input name="name" required></div>
-      <div><label>Student ID</label><input name="studentId" required pattern="[0-9]{6,10}" title="6–10 digits"></div>
-      <div><label>Email</label><input name="email" type="email" required></div>
-      <div><label>Phone</label><input name="phone" required></div>
-      <button class="btn">Register</button>
-    </form>
+  adminShell(u, "admin/borrowers", "Borrowers", "Register students who can borrow books.", `
+    <section class="card panel"><div class="sec"><h2>Register a borrower</h2></div>
+    <form class="form" id="rf">
+      <div><label for="rf-n">Full name</label><input id="rf-n" name="name" required></div>
+      <div><label for="rf-s">Student ID</label><input id="rf-s" name="studentId" required pattern="[0-9]{6,10}" title="6–10 digits" inputmode="numeric"></div>
+      <div><label for="rf-e">Email</label><input id="rf-e" name="email" type="email" required></div>
+      <div><label for="rf-p">Phone</label><input id="rf-p" name="phone" type="tel" required></div>
+      <div class="form-btns"><button class="btn">${AI.plus}Register</button></div>
+    </form></section>
+    <div class="sec"><h2>Registered students <span class="cnt" id="rcnt"></span></h2></div>
+    <div class="bar">${searchBox("rq", "Search by name or student ID")}</div>
     <div id="rt"></div>`);
   const draw = () => {
-    $("#rt").innerHTML = `<table><tr><th>Name</th><th>Student ID</th><th>Email</th><th>Phone</th><th>Active loans</th></tr>
-      ${db.borrowers.map(b => `<tr><td>${esc(b.name)}</td><td>${esc(b.studentId)}</td><td>${esc(b.email)}</td><td>${esc(b.phone)}</td>
-      <td>${db.loans.filter(l => l.borrowerId === b.id && l.status === "Borrowed").length}</td></tr>`).join("")}</table>`;
+    const q = $("#rq").value.toLowerCase();
+    const rows = db.borrowers.filter(b => (b.name + b.studentId + b.email).toLowerCase().includes(q));
+    $("#rcnt").textContent = `${rows.length} of ${db.borrowers.length}`;
+    $("#rt").innerHTML = rows.length ? `<div class="tbl"><table><tr><th>Student</th><th>Student ID</th><th>Phone</th><th>Active loans</th></tr>
+      ${rows.map(b => { const n = db.loans.filter(l => l.borrowerId === b.id && l.status === "Borrowed").length;
+        return `<tr><td><div class="who-cell"><span class="adm-av" aria-hidden="true">${esc(initials(b.name))}</span><div><b>${esc(b.name)}</b><small>${esc(b.email)}</small></div></div></td>
+        <td>${esc(b.studentId)}</td><td>${esc(b.phone)}</td><td><span class="pill ${n ? "p-info" : "p-muted"}">${n}</span></td></tr>`; }).join("")}</table></div>`
+      : `<div class="card empty">No students match your search.</div>`;
   };
   $("#rf").onsubmit = e => {
     e.preventDefault(); const form = e.target, f = form.elements;
@@ -189,33 +259,40 @@ function adminBorrowers(u) {
     db.borrowers.push({ id: uid("B"), name: f.name.value.trim(), studentId: f.studentId.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim() });
     save(); form.reset(); draw(); toast("Borrower registered");
   };
-  draw();
+  $("#rq").oninput = draw; draw();
 }
 
 function loanTable(rows, withActions) {
   if (!rows.length) return `<div class="card empty">No loans to show.</div>`;
-  return `<table><tr><th>Book</th><th>Borrower</th><th>Requested</th><th>Due</th><th>Status</th>${withActions ? "<th></th>" : ""}</tr>
-    ${rows.map(l => `<tr><td>${esc(book(l.bookId)?.title || "—")}</td><td>${esc(borrower(l.borrowerId)?.name || "—")}</td>
-    <td>${l.requested}</td><td>${l.due || "—"}</td><td>${statusPill(l)}</td>
+  return `<div class="tbl"><table><tr><th>Book</th><th>Borrower</th><th>Requested</th><th>Due</th><th>Status</th>${withActions ? "<th></th>" : ""}</tr>
+    ${rows.map(l => { const br = borrower(l.borrowerId); return `<tr><td><b>${esc(book(l.bookId)?.title || "—")}</b></td>
+    <td>${esc(br?.name || "—")}${br ? `<small>${esc(br.studentId)}</small>` : ""}</td>
+    <td>${l.requested}</td><td>${l.due || "—"}${isOverdue(l) ? `<small class="late">${daysLate(l)} days late</small>` : ""}</td><td>${statusPill(l)}</td>
     ${withActions ? `<td class="actions">${l.status === "Requested" ? `<button class="btn small" data-a="${l.id}">Approve</button><button class="btn ghost small" data-r="${l.id}">Reject</button>`
-      : l.status === "Borrowed" ? `<button class="btn ghost small" data-ret="${l.id}">Mark returned</button>` : ""}</td>` : ""}</tr>`).join("")}</table>`;
+      : l.status === "Borrowed" ? `<button class="btn ghost small" data-ret="${l.id}">Mark returned</button>` : ""}</td>` : ""}</tr>`; }).join("")}</table></div>`;
 }
 
 function adminLoans(u) {
-  shell(u, ADMIN_LINKS, "admin/loans", `
-    <h1>Loans</h1><p class="lead">Approve borrow requests and record returns.</p>
-    <div class="bar"><select id="fs"><option value="">All statuses</option><option>Requested</option><option>Borrowed</option><option value="Overdue">Overdue</option><option>Returned</option></select></div>
+  let s = loanFilter; loanFilter = "";
+  adminShell(u, "admin/loans", "Loans", "Approve borrow requests and record returns.", `
+    <div class="adm-tabs" id="fs" role="tablist"></div>
+    <div class="bar">${searchBox("lq", "Search by book or borrower")}</div>
     <div id="lt"></div>`);
+  const TABS = [["", "All"], ["Requested", "Requested"], ["Borrowed", "Borrowed"], ["Overdue", "Overdue"], ["Returned", "Returned"], ["Rejected", "Rejected"]];
+  const match = (l, k) => !k || (k === "Overdue" ? isOverdue(l) : l.status === k);
   const draw = () => {
-    const s = $("#fs").value;
-    const rows = db.loans.filter(l => !s || (s === "Overdue" ? isOverdue(l) : l.status === s));
+    $("#fs").innerHTML = TABS.map(([k, t]) => `<button type="button" role="tab" aria-selected="${k === s}" class="${k === s ? "on" : ""}" data-s="${k}">${t}<i>${db.loans.filter(l => match(l, k)).length}</i></button>`).join("");
+    document.querySelectorAll("[data-s]").forEach(x => x.onclick = () => { s = x.dataset.s; draw(); });
+    const q = $("#lq").value.toLowerCase();
+    const rows = db.loans.filter(l => match(l, s) && ((book(l.bookId)?.title || "") + (borrower(l.borrowerId)?.name || "") + (borrower(l.borrowerId)?.studentId || "")).toLowerCase().includes(q));
     $("#lt").innerHTML = loanTable(rows, true);
     const L = id => db.loans.find(l => l.id === id);
-    document.querySelectorAll("[data-a]").forEach(x => x.onclick = () => { const l = L(x.dataset.a); l.status = "Borrowed"; l.due = addDays(today(), LOAN_DAYS); save(); draw(); toast("Request approved"); });
-    document.querySelectorAll("[data-r]").forEach(x => x.onclick = () => { L(x.dataset.r).status = "Rejected"; save(); draw(); toast("Request rejected"); });
+    document.querySelectorAll("[data-a]").forEach(x => x.onclick = () => { const l = L(x.dataset.a); l.status = "Borrowed"; l.due = addDays(today(), LOAN_DAYS); save(); draw(); refreshBadge(); toast("Request approved"); });
+    document.querySelectorAll("[data-r]").forEach(x => x.onclick = () => { L(x.dataset.r).status = "Rejected"; save(); draw(); refreshBadge(); toast("Request rejected"); });
     document.querySelectorAll("[data-ret]").forEach(x => x.onclick = () => { L(x.dataset.ret).status = "Returned"; save(); draw(); toast("Book marked as returned"); });
   };
-  $("#fs").onchange = draw; draw();
+  const refreshBadge = () => { const n = db.loans.filter(l => l.status === "Requested").length, em = $(".adm-nav a.on em"); if (em) n ? em.textContent = n : em.remove(); };
+  $("#lq").oninput = draw; draw();
 }
 
 // ---------- Borrower ----------
