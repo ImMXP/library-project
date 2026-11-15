@@ -1,4 +1,4 @@
-// UniLib – Sprint 1 clickable prototype. Data lives in localStorage (mock only).
+// UniLib – Sprint 1 clickable prototype. Data lives in localStorage (mock only)
 const KEY = "unilib-data-v1";
 const LOAN_DAYS = 14;
 
