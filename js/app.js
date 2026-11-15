@@ -233,8 +233,8 @@ function adminBooks(u) {
     const rows = db.books.filter(b => (b.title + b.author).toLowerCase().includes(q));
     $("#bcnt").textContent = `${rows.length} of ${db.books.length}`;
     $("#bt").innerHTML = rows.length ? `<div class="tbl"><table><tr><th>Book</th><th>Category</th><th>Copies</th><th>Available</th><th></th></tr>
-      ${rows.map(b => { 
-        const av = available(b); 
+      ${rows.map(b => {
+        const av = available(b);
         const img = bookCover(b);
         return `<tr>
           <td><div class="who-cell">
@@ -247,14 +247,14 @@ function adminBooks(u) {
             <button class="btn ghost small" data-read="${b.id}">${AI.read}Read</button>
             <button class="btn ghost small" data-e="${b.id}">Edit</button>
             <button class="btn danger small" data-d="${b.id}">Delete</button>
-          </td></tr>`; 
+          </td></tr>`;
       }).join("")}</table></div>`
       : `<div class="card empty">No books match your search.</div>`;
-    
+
     document.querySelectorAll("[data-read]").forEach(x => x.onclick = () => openReader(x.dataset.read));
     document.querySelectorAll("[data-e]").forEach(x => x.onclick = () => {
       const b = book(x.dataset.e);
-      ["id", "title", "author", "category", "copies", "isbn", "pdfUrl"].forEach(k => { if (f[k]) f[k].value = b[k] || ""; });
+      ["id", "title", "author", "category", "copies", "isbn", "pdfUrl"].forEach(k => { if (f[k]) f[k].value = b[k] ?? ""; });
       $("#bsave").textContent = "Save changes"; $("#bft").textContent = "Edit book"; $("#bcancel").hidden = false;
       form.scrollIntoView({ behavior: "smooth", block: "center" }); f.title.focus();
     });
@@ -266,13 +266,13 @@ function adminBooks(u) {
   };
   form.onsubmit = e => {
     e.preventDefault();
-    const data = { 
-      title: f.title.value.trim(), 
-      author: f.author.value.trim(), 
-      category: f.category.value.trim(), 
+    const data = {
+      title: f.title.value.trim(),
+      author: f.author.value.trim(),
+      category: f.category.value.trim(),
       copies: +f.copies.value,
-      isbn: f.isbn ? f.isbn.value.trim() : "",
-      pdfUrl: f.pdfUrl ? f.pdfUrl.value.trim() : ""
+      isbn: f.isbn.value.trim(),
+      pdfUrl: f.pdfUrl.value.trim()
     };
     if (f.id.value) { Object.assign(book(f.id.value), data); toast("Book updated"); }
     else { db.books.push({ id: uid("BK"), ...data }); toast("Book added"); }
@@ -396,12 +396,13 @@ function meCatalog(u) {
     $("#mcnt").textContent = `${rows.length} of ${db.books.length}`;
     $("#bk").innerHTML = rows.length ? rows.map(b => {
       const av = available(b);
-      const mine = db.loans.some(l => l.bookId === b.id && l.borrowerId === u.borrowerId && (l.status === "Requested" || l.status === "Borrowed"));
+      const myLoan = db.loans.find(l => l.bookId === b.id && l.borrowerId === u.borrowerId && (l.status === "Requested" || l.status === "Borrowed"));
+      const mine = !!myLoan;
       const color = UQU_COLORS[db.books.indexOf(b) % UQU_COLORS.length];
       const img = bookCover(b);
       return `<div class="card book">
         <div class="cover" style="background:${color}">
-          ${img ? `<img src="${esc(img)}" alt="${esc(b.title)}" onerror="this.outerHTML='<span>${esc(b.title[0])}</span>'">` : `<span>${esc(b.title[0])}</span>`}
+          ${img ? `<img src="${esc(img)}" alt="${esc(b.title)}" data-fb="${esc(`<span>${esc(b.title[0])}</span>`)}" onerror="this.outerHTML=this.dataset.fb">` : `<span>${esc(b.title[0])}</span>`}
           <small>${esc(b.category)}</small>
         </div>
         <div class="t">${esc(b.title)}</div>
@@ -410,7 +411,7 @@ function meCatalog(u) {
           <span class="pill ${av > 0 ? "p-ok" : "p-bad"}">${av > 0 ? av + " available" : "Unavailable"}</span>
           <div style="display:flex;gap:4px">
             <button type="button" class="btn ghost small" data-read="${b.id}" title="Read book">${AI.read} Read</button>
-            <button class="btn small" data-b="${b.id}" ${av < 1 || mine ? "disabled" : ""}>${mine ? "Requested" : `${AI.plus}Borrow`}</button>
+            <button class="btn small" data-b="${b.id}" ${av < 1 || mine ? "disabled" : ""}>${mine ? myLoan.status : `${AI.plus}Borrow`}</button>
           </div>
         </div>
       </div>`;
