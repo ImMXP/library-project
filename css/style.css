@@ -237,3 +237,60 @@ tr:last-child td{border-bottom:0}
   .adm main{padding:0}
 }
 @media (max-width:420px){.adm .stats{grid-template-columns:1fr}.adm .gp-link{padding:8px}}
+/* ===== Borrower additions (shares .adm UQU portal shell) ===== */
+.adm .books{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:16px}
+.adm .book{display:flex;flex-direction:column;gap:8px;padding:14px;transition:box-shadow .15s,transform .15s}
+.adm .book:hover{box-shadow:0 8px 20px rgba(29,77,51,.09);transform:translateY(-2px)}
+.adm .book .cover{height:108px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-weight:700;font-size:28px;position:relative;overflow:hidden}
+.adm .book .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.14),transparent 60%)}
+.adm .book .cover small{font-size:10.5px;font-weight:500;letter-spacing:.04em;opacity:.88;text-transform:uppercase}
+.adm .book .t{font-weight:600;font-size:14.5px;color:var(--gd);line-height:1.35}
+.adm .book .a{color:var(--muted);font-size:12.5px}
+.adm .book .row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+.adm .bar select{max-width:210px;background:#fff}
+/* صورة غلاف الكتاب */
+.adm .book .cover{height:170px;background:#eef3f0;padding:0}
+.adm .book .cover img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* نافذة قراءة الكتاب داخل الموقع */
+.reader-modal{position:fixed;inset:0;background:rgba(15,30,22,.78);z-index:50;display:grid;place-items:center;padding:16px}
+.reader-box{background:#fff;width:100%;max-width:960px;height:88vh;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.reader-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--gd);color:#fff}
+.reader-head h3{margin:0;font-size:15px}
+.reader-body{flex:1;background:#2b2b2b}
+.reader-body iframe{width:100%;height:100%;border:0}
+.adm .book .cover {
+  height: 170px;
+  background: #eef3f0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.adm .book .cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.adm .book .cover span {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+}
+.adm .book .cover small {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  z-index: 2;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+}
