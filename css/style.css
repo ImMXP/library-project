@@ -111,3 +111,129 @@ tr:last-child td{border-bottom:0}
   .top{padding:12px 16px}
   table{display:block;overflow-x:auto}
 }
+
+/* ===== Admin – UQU portal style. Everything is scoped under .adm so login + borrower pages are unchanged.
+   Reuses the .gp tokens (--g, --g2, --gd, --gl, --gb) and .gp-strip / .gp-head / .gp-foot from the login page. */
+.adm{--line:#e3e8e5;--muted:#5f6b66;--gold:#b8935a;--teal:#1f6f6b;font-size:14px}
+.adm .gp-in,.adm-in{max-width:1120px}
+.adm-in{margin:0 auto;padding:0 16px;width:100%}
+.adm main{flex:1;padding:0;max-width:none}
+.adm [hidden]{display:none!important}
+.adm h1{font-size:24px;font-weight:700;margin:0 0 4px;color:#fff}
+
+/* header user block */
+.adm-who{display:flex;align-items:center;gap:10px}
+.adm-av{width:34px;height:34px;border-radius:50%;background:var(--gl);color:var(--gd);border:1px solid var(--gb);display:grid;place-items:center;font-weight:600;font-size:12px;flex:none}
+.adm-id b{display:block;font-size:13px;font-weight:600;line-height:1.25}
+.adm .role{display:inline-block;margin-top:2px;font-size:10.5px;padding:1px 8px;border-radius:99px;background:var(--gl);color:var(--g2);border:1px solid var(--gb);font-weight:600}
+.adm .gp-link{font-family:inherit;cursor:pointer;margin-left:4px}
+
+/* main nav – dark green bar with gold active marker (logo colours) */
+.adm-nav{background:var(--gd);position:sticky;top:0;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.adm-nav .gp-in{justify-content:flex-start;gap:2px;overflow-x:auto}
+.adm-nav a{display:flex;align-items:center;gap:8px;padding:13px 14px 11px;color:rgba(255,255,255,.78);text-decoration:none;font-size:13px;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}
+.adm-nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
+.adm-nav a.on{color:#fff;font-weight:600;border-bottom-color:var(--gold)}
+.adm-nav a:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+.adm-nav em{font-style:normal;background:var(--gold);color:#fff;font-size:10.5px;font-weight:700;border-radius:99px;padding:1px 7px;line-height:1.5}
+
+/* page header band – campus photo, like the login hero */
+.adm-hero{color:#fff;padding:26px 0 28px;background:linear-gradient(90deg,rgba(29,77,51,.95),rgba(28,131,84,.72)),url("../assets/hero.webp") center 40%/cover no-repeat,var(--gd)}
+.adm-crumb{display:flex;align-items:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.75);margin-bottom:8px}
+.adm-crumb svg{width:12px;height:12px}
+.adm-hero p{margin:0;font-size:13px;color:rgba(255,255,255,.88)}
+.adm-body{padding:24px 16px 44px}
+
+/* cards + section titles */
+.adm .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 1px 2px rgba(16,40,28,.04)}
+.adm .sec{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.adm .sec h2{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;margin:0;color:var(--gd)}
+.adm .sec h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--gold)}
+.adm .sec a{font-size:12.5px;font-weight:600;color:var(--g2);text-decoration:none}
+.adm .sec a:hover{text-decoration:underline}
+.adm .cnt{font-size:12px;font-weight:500;color:var(--muted)}
+.adm-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+
+/* stat tiles */
+.adm .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.adm .stat{display:flex;align-items:center;gap:14px;text-align:left;font:inherit;color:inherit;border-top:3px solid var(--g2);cursor:pointer;transition:box-shadow .15s,transform .15s}
+.adm .stat:hover{box-shadow:0 8px 20px rgba(29,77,51,.1);transform:translateY(-1px)}
+.adm .stat:focus-visible{outline:2px solid var(--g2);outline-offset:2px}
+.stat-ic{width:42px;height:42px;border-radius:8px;background:var(--gl);color:var(--g2);display:grid;place-items:center;flex:none}
+.adm .stat-ic svg{width:20px;height:20px}
+.adm .stat .n{display:block;font-size:26px;font-weight:700;line-height:1.1}
+.adm .stat .l{display:block;font-size:12.5px;color:var(--muted)}
+.stat-go{margin-left:auto;color:#a3b0aa}
+.adm .stat.teal{border-top-color:var(--teal)} .adm .teal .stat-ic{background:#e7f1ef;color:var(--teal)}
+.adm .stat.warn{border-top-color:var(--gold)} .adm .warn .stat-ic{background:#fbf4e8;color:#8f6a33}
+.adm .stat.bad{border-top-color:var(--bad)} .adm .bad .stat-ic{background:#fdecec;color:var(--bad)} .adm .stat.bad .n{color:var(--bad)}
+
+/* "needs attention" list */
+.att ul{list-style:none;margin:0;padding:0}
+.att li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.att li:first-child{padding-top:0}
+.att-ic{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;flex:none}
+.att-ic.warn{background:#fbf3e3;color:#8f6a33} .att-ic.bad{background:#fdecec;color:var(--bad)}
+.adm .att-ic svg{width:15px;height:15px}
+.att-t{min-width:0} .att-t b{display:block;font-size:13px;font-weight:600} .att-t small{font-size:11.5px;color:var(--muted)}
+.att-ok{display:flex;align-items:center;gap:8px;color:var(--ok);font-size:13px;margin:4px 0}
+.adm .att-more{width:100%;margin-top:12px;text-decoration:none}
+
+/* controls */
+.adm input,.adm select{border:1px solid #d6d6d6;border-radius:4px;font-size:13px;padding:9px 11px}
+.adm input:focus,.adm select:focus{outline:none;border-color:var(--g2);box-shadow:0 0 0 3px rgba(58,129,89,.15)}
+.adm .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--g2);border-radius:4px;font-size:13px;font-weight:600;padding:9px 16px;white-space:nowrap}
+.adm .btn:hover{background:var(--gd)}
+.adm .btn:focus-visible{outline:2px solid var(--g2);outline-offset:2px}
+.adm .btn svg{width:14px;height:14px}
+.adm .btn.ghost{background:#fff;color:#1a1a1a;border:1px solid #d6d6d6}
+.adm .btn.ghost:hover{border-color:var(--g2);color:var(--g2)}
+.adm .btn.danger{background:#fff;color:var(--bad);border:1px solid #efc9c9}
+.adm .btn.danger:hover{background:#fdf0f0;border-color:var(--bad)}
+.adm .btn.small{padding:5px 11px;font-size:12px}
+.adm .panel{margin-bottom:24px}
+.adm .form{margin:0;align-items:end}
+.adm .form label{margin:0 0 6px}
+.form-btns{display:flex;gap:8px}
+.adm .bar{margin-bottom:12px}
+.adm-search{position:relative;display:block;flex:1;max-width:360px;margin:0}
+.adm-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#7a8781;width:15px;height:15px}
+.adm .bar .adm-search input{padding-left:34px;max-width:none}
+
+/* status tabs (same pattern as the login tabs) */
+.adm-tabs{display:flex;gap:20px;border-bottom:1px solid #e3e3e3;margin-bottom:16px;overflow-x:auto}
+.adm-tabs button{display:flex;align-items:center;gap:6px;border:0;background:none;padding:6px 2px 10px;font-size:13px;font-weight:500;color:#444;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.adm-tabs button:hover{color:var(--g2)}
+.adm-tabs button.on{color:var(--g2);font-weight:600;border-bottom-color:var(--g2)}
+.adm-tabs i{font-style:normal;font-size:11px;background:#eef1ef;color:#555;border-radius:99px;padding:0 7px}
+.adm-tabs .on i{background:var(--gl);color:var(--g2)}
+
+/* tables */
+.adm .tbl{background:#fff;border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+.adm table{display:table;border:0;border-radius:0;background:none;min-width:600px}
+.adm th{background:#f3f8f5;color:var(--gd);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--gb);white-space:nowrap}
+.adm td{font-size:13.5px;vertical-align:middle}
+.adm tr:hover td{background:#fafdfb}
+.adm td b{font-weight:600}
+.adm td:not(:first-child){white-space:nowrap}
+.adm td small{display:block;font-size:11.5px;color:var(--muted)}
+.adm td small.late{color:var(--bad);font-weight:600}
+.adm td.actions{display:table-cell;white-space:nowrap;text-align:right}
+.adm td.actions .btn+.btn{margin-left:6px}
+.who-cell{display:flex;align-items:center;gap:10px}
+.adm .who-cell .adm-av{width:30px;height:30px;font-size:11px}
+.adm .pill{font-size:11.5px;padding:3px 9px}
+.adm .p-ok{background:#e6f4ec;color:#1d6b3f} .adm .p-warn{background:#fbf3e3;color:#8a6100}
+.adm .p-bad{background:#fdecec;color:#a61b1b} .adm .p-info{background:#e7f1ef;color:var(--teal)}
+.adm .p-muted{background:#f0f2f1;color:#6b7570}
+.adm .empty{color:var(--muted)}
+
+@media (max-width:900px){.adm-grid{grid-template-columns:minmax(0,1fr)}.adm .stats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:760px){
+  .adm .form{grid-template-columns:1fr}
+  .adm-id{display:none}
+  .adm-hero{padding:20px 0 22px}
+  .adm h1{font-size:20px}
+  .adm main{padding:0}
+}
+@media (max-width:420px){.adm .stats{grid-template-columns:1fr}.adm .gp-link{padding:8px}}
