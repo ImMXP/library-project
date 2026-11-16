@@ -34,9 +34,9 @@ function check(id, name, fn) {
 }
 const q = s => document.querySelector(s);
 const qa = s => [...document.querySelectorAll(s)];
-function login(role, u, p) {
+function login(u, p) {
   setSession(null); location.hash = ""; route();
-  loginRole = role; renderLogin();
+  renderLogin();
   q("#u").value = u; q("#p").value = p;
   q("#lf").dispatchEvent(new Event("submit", { cancelable: true }));
 }
@@ -44,19 +44,19 @@ function go(h) { location.hash = h; route(); }
 function submit(form, values) { Object.entries(values).forEach(([k, v]) => form.elements[k].value = v); form.dispatchEvent(new Event("submit", { cancelable: true })); }
 
 check("TC-01", "Borrower logs in with valid demo account", () => {
-  login("borrower", "s441001", "1234");
+  login("s441001", "1234");
   return q("main h1").textContent === "Browse books" && q(".role").textContent === "Borrower";
 });
 check("TC-02", "Wrong password shows error and stays on login", () => {
-  login("borrower", "s441001", "wrong");
+  login("s441001", "wrong");
   return q("#err").textContent.includes("Invalid") && !q("main");
 });
-check("TC-03", "Admin logs in through the Administrator tab", () => {
-  login("admin", "admin", "admin123");
+check("TC-03", "Admin logs in automatically with admin credentials", () => {
+  login("admin", "admin123");
   return q("main h1").textContent === "Dashboard" && q(".role").textContent === "Admin";
 });
 check("TC-04", "Borrower searches the catalog by title", () => {
-  login("borrower", "s441001", "1234");
+  login("s441001", "1234");
   q("#q").value = "clean"; q("#q").dispatchEvent(new Event("input"));
   return qa(".book").length === 1 && q(".book .t").textContent === "Clean Code";
 });
@@ -69,7 +69,7 @@ check("TC-05", "Borrower requests a book and sees it in My loans", () => {
   return btn.disabled && btn.textContent === "Requested" && rows.some(t => t.includes("Introduction to Algorithms") && t.includes("Requested"));
 });
 check("TC-06", "Admin adds, edits and cannot delete a book with active loans", () => {
-  login("admin", "admin", "admin123"); go("#/admin/books");
+  login("admin", "admin123"); go("#/admin/books");
   submit(q("#bf"), { title: "Test Book", author: "QA Team", category: "Testing", copies: 2 });
   const added = qa("#bt tr").some(r => r.textContent.includes("Test Book"));
   const row = qa("#bt tr").find(r => r.textContent.includes("Test Book"));
@@ -105,7 +105,7 @@ check("TC-09", "Dashboard counts match the loan data", () => {
     && n[2] === db.loans.filter(l => l.status === "Requested").length && n[3] === db.loans.filter(isOverdue).length;
 });
 check("TC-10", "Borrower cannot open admin pages", () => {
-  login("borrower", "s441001", "1234"); go("#/admin/books");
+  login("s441001", "1234"); go("#/admin/books");
   return q("main h1").textContent === "Browse books";
 });
 

@@ -3,4 +3,4 @@ Project about a E-library for Umm Al-Qura University to make the study life easy
 that provide by the university .
 
 # Login page 🚪
-<img width="1309" height="967" alt="{E080FE81-7CB5-4832-9700-EE6334BB477C}" src="https://github.com/user-attachments/assets/fdf507a7-20c9-4e19-8a72-0e3b1eea8950" />
+<img width="2559" height="1306" alt="Admin-Student-Login-Page-Unified" src="https://github.com/user-attachments/assets/05be027d-d588-4ffe-8029-fb7a9e291958" />

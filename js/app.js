@@ -3,14 +3,14 @@ const KEY = "unilib-data-v1";
 const LOAN_DAYS = 14;
 
 function load() {
-  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) return d; } catch (e) {}
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) return d; } catch (e) { }
   return JSON.parse(JSON.stringify(SEED));
 }
 let db = load();
-function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { } }
 
 function getSession() { try { return JSON.parse(sessionStorage.getItem("unilib-session")); } catch (e) { return null; } }
-function setSession(s) { try { s ? sessionStorage.setItem("unilib-session", JSON.stringify(s)) : sessionStorage.removeItem("unilib-session"); } catch (e) {} }
+function setSession(s) { try { s ? sessionStorage.setItem("unilib-session", JSON.stringify(s)) : sessionStorage.removeItem("unilib-session"); } catch (e) { } }
 
 // ?demo=admin or ?demo=borrower logs in directly (used for report screenshots)
 const demo = new URLSearchParams(location.search).get("demo");
@@ -51,8 +51,8 @@ function openReader(bookId) {
       </div>
       <div class="reader-body">
         ${b.pdfUrl
-          ? `<iframe src="${esc(b.pdfUrl)}" title="${esc(b.title)}"></iframe>`
-          : `<div style="color:#fff;padding:60px;text-align:center;font-size:15px">
+      ? `<iframe src="${esc(b.pdfUrl)}" title="${esc(b.title)}"></iframe>`
+      : `<div style="color:#fff;padding:60px;text-align:center;font-size:15px">
                <h3>📖 Reading Mode: ${esc(b.title)}</h3>
                <p style="color:#aaa;margin-top:10px">No digital PDF file is attached to this prototype entry yet. You can attach a PDF link via Admin or enjoy reading the physical copy!</p>
              </div>`}
@@ -64,10 +64,8 @@ function openReader(bookId) {
 }
 
 // ---------- Login ----------
-let loginRole = "borrower";
 const LI = {
   user: `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`,
-  shield: `<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>`,
   lock: `<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
   eye: `<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`,
   arrow: `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`,
@@ -75,7 +73,6 @@ const LI = {
   info: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`
 };
 function renderLogin() {
-  const adm = loginRole === "admin";
   $("#app").innerHTML = `
   <div class="gp">
     <div class="gp-strip"><div class="gp-in"><span><i class="gp-flag"></i>An official service of Umm Al-Qura University</span><span>English</span></div></div>
@@ -87,13 +84,9 @@ function renderLogin() {
       <img class="gp-icon" src="assets/uqu-logo.png" alt="">
       <h1>Sign in to UniLib</h1>
       <p class="gp-sub">University Library Borrowing System</p>
-      <div class="gp-tabs" role="tablist">
-        <button type="button" data-r="borrower" class="${adm ? "" : "on"}">${LI.user}Borrower</button>
-        <button type="button" data-r="admin" class="${adm ? "on" : ""}">${LI.shield}Administrator</button>
-      </div>
       <form id="lf">
-        <label for="u">${adm ? "Admin username" : "Student ID"}</label>
-        <div class="gp-field">${LI.user}<input id="u" autocomplete="username" placeholder="${adm ? "admin" : "s441001"}"></div>
+        <label for="u">Username</label>
+        <div class="gp-field">${LI.user}<input id="u" autocomplete="username" placeholder="s441001 or admin"></div>
         <label for="p">Password</label>
         <div class="gp-field">${LI.lock}<input id="p" type="password" autocomplete="current-password" placeholder="••••••••">
           <button type="button" class="gp-eye" aria-label="Show password">${LI.eye}</button></div>
@@ -101,16 +94,16 @@ function renderLogin() {
         <button class="gp-btn">Sign in ${LI.arrow}</button>
       </form>
       <div class="gp-note">${LI.info}<div><b>Prototype demo accounts</b>
-        ${adm ? "admin / admin123" : "s441001 / 1234 &nbsp;·&nbsp; s441002 / 1234"}</div></div>
+        Borrower: s441001 / 1234 &nbsp;·&nbsp; s441002 / 1234<br>
+        Admin: admin / admin123</div></div>
     </div></div>
     <footer class="gp-foot"><div class="gp-in"><span>© 2026 Umm Al-Qura University. All rights reserved.</span><b>UniLib · University Library Borrowing</b></div></footer>
   </div>`;
-  document.querySelectorAll(".gp-tabs button").forEach(b => b.onclick = () => { loginRole = b.dataset.r; renderLogin(); });
   $(".gp-eye").onclick = () => { const p = $("#p"); p.type = p.type === "password" ? "text" : "password"; };
   $("#lf").onsubmit = e => {
     e.preventDefault();
-    const acc = DEMO_ACCOUNTS.find(a => a.username === $("#u").value.trim() && a.password === $("#p").value && a.role === loginRole);
-    if (!acc) { $("#err").textContent = "Invalid username or password for this portal."; return; }
+    const acc = DEMO_ACCOUNTS.find(a => a.username === $("#u").value.trim() && a.password === $("#p").value);
+    if (!acc) { $("#err").textContent = "Invalid username or password."; return; }
     setSession(acc);
     location.hash = acc.role === "admin" ? "#/admin/dashboard" : "#/me/catalog";
     route();
@@ -199,10 +192,10 @@ function adminDashboard(u) {
       <section><div class="sec"><h2>Recent activity</h2><a href="#/admin/loans">View all loans</a></div>${loanTable(recent, false)}</section>
       <aside class="card att"><div class="sec"><h2>Needs attention</h2></div>
         ${attention.length ? `<ul>${attention.slice(0, 6).map(l => {
-          const o = isOverdue(l);
-          return `<li><span class="att-ic ${o ? "bad" : "warn"}">${o ? AI.alert : AI.clock}</span>
+    const o = isOverdue(l);
+    return `<li><span class="att-ic ${o ? "bad" : "warn"}">${o ? AI.alert : AI.clock}</span>
             <div class="att-t"><b>${esc(book(l.bookId)?.title || "—")}</b><small>${esc(borrower(l.borrowerId)?.name || "—")} · ${o ? `${daysLate(l)} days overdue` : `requested ${l.requested}`}</small></div></li>`;
-        }).join("")}</ul>` : `<p class="att-ok">${AI.check}All caught up. Nothing needs action.</p>`}
+  }).join("")}</ul>` : `<p class="att-ok">${AI.check}All caught up. Nothing needs action.</p>`}
         <a class="btn ghost small att-more" href="#/admin/loans">Open loans ${AI.chev}</a>
       </aside>
     </div>`);
@@ -233,10 +226,10 @@ function adminBooks(u) {
     const rows = db.books.filter(b => (b.title + b.author).toLowerCase().includes(q));
     $("#bcnt").textContent = `${rows.length} of ${db.books.length}`;
     $("#bt").innerHTML = rows.length ? `<div class="tbl"><table><tr><th>Book</th><th>Category</th><th>Copies</th><th>Available</th><th></th></tr>
-      ${rows.map(b => { 
-        const av = available(b); 
-        const img = bookCover(b);
-        return `<tr>
+      ${rows.map(b => {
+      const av = available(b);
+      const img = bookCover(b);
+      return `<tr>
           <td><div class="who-cell">
             ${img ? `<img src="${esc(img)}" alt="" style="width:36px;height:48px;object-fit:cover;border-radius:4px;flex:none">` : `<span class="adm-av">${esc(b.title[0])}</span>`}
             <div><b>${esc(b.title)}</b><small>${esc(b.author)}</small></div>
@@ -247,10 +240,10 @@ function adminBooks(u) {
             <button class="btn ghost small" data-read="${b.id}">${AI.read}Read</button>
             <button class="btn ghost small" data-e="${b.id}">Edit</button>
             <button class="btn danger small" data-d="${b.id}">Delete</button>
-          </td></tr>`; 
-      }).join("")}</table></div>`
+          </td></tr>`;
+    }).join("")}</table></div>`
       : `<div class="card empty">No books match your search.</div>`;
-    
+
     document.querySelectorAll("[data-read]").forEach(x => x.onclick = () => openReader(x.dataset.read));
     document.querySelectorAll("[data-e]").forEach(x => x.onclick = () => {
       const b = book(x.dataset.e);
@@ -266,10 +259,10 @@ function adminBooks(u) {
   };
   form.onsubmit = e => {
     e.preventDefault();
-    const data = { 
-      title: f.title.value.trim(), 
-      author: f.author.value.trim(), 
-      category: f.category.value.trim(), 
+    const data = {
+      title: f.title.value.trim(),
+      author: f.author.value.trim(),
+      category: f.category.value.trim(),
       copies: +f.copies.value,
       isbn: f.isbn ? f.isbn.value.trim() : "",
       pdfUrl: f.pdfUrl ? f.pdfUrl.value.trim() : ""
@@ -300,9 +293,11 @@ function adminBorrowers(u) {
     const rows = db.borrowers.filter(b => (b.name + b.studentId + b.email).toLowerCase().includes(q));
     $("#rcnt").textContent = `${rows.length} of ${db.borrowers.length}`;
     $("#rt").innerHTML = rows.length ? `<div class="tbl"><table><tr><th>Student</th><th>Student ID</th><th>Phone</th><th>Active loans</th></tr>
-      ${rows.map(b => { const n = db.loans.filter(l => l.borrowerId === b.id && l.status === "Borrowed").length;
-        return `<tr><td><div class="who-cell"><span class="adm-av" aria-hidden="true">${esc(initials(b.name))}</span><div><b>${esc(b.name)}</b><small>${esc(b.email)}</small></div></div></td>
-        <td>${esc(b.studentId)}</td><td>${esc(b.phone)}</td><td><span class="pill ${n ? "p-info" : "p-muted"}">${n}</span></td></tr>`; }).join("")}</table></div>`
+      ${rows.map(b => {
+      const n = db.loans.filter(l => l.borrowerId === b.id && l.status === "Borrowed").length;
+      return `<tr><td><div class="who-cell"><span class="adm-av" aria-hidden="true">${esc(initials(b.name))}</span><div><b>${esc(b.name)}</b><small>${esc(b.email)}</small></div></div></td>
+        <td>${esc(b.studentId)}</td><td>${esc(b.phone)}</td><td><span class="pill ${n ? "p-info" : "p-muted"}">${n}</span></td></tr>`;
+    }).join("")}</table></div>`
       : `<div class="card empty">No students match your search.</div>`;
   };
   $("#rf").onsubmit = e => {
@@ -317,11 +312,13 @@ function adminBorrowers(u) {
 function loanTable(rows, withActions) {
   if (!rows.length) return `<div class="card empty">No loans to show.</div>`;
   return `<div class="tbl"><table><tr><th>Book</th><th>Borrower</th><th>Requested</th><th>Due</th><th>Status</th>${withActions ? "<th></th>" : ""}</tr>
-    ${rows.map(l => { const br = borrower(l.borrowerId); return `<tr><td><b>${esc(book(l.bookId)?.title || "—")}</b></td>
+    ${rows.map(l => {
+    const br = borrower(l.borrowerId); return `<tr><td><b>${esc(book(l.bookId)?.title || "—")}</b></td>
     <td>${esc(br?.name || "—")}${br ? `<small>${esc(br.studentId)}</small>` : ""}</td>
     <td>${l.requested}</td><td>${l.due || "—"}${isOverdue(l) ? `<small class="late">${daysLate(l)} days late</small>` : ""}</td><td>${statusPill(l)}</td>
     ${withActions ? `<td class="actions">${l.status === "Requested" ? `<button class="btn small" data-a="${l.id}">Approve</button><button class="btn ghost small" data-r="${l.id}">Reject</button>`
-      : l.status === "Borrowed" ? `<button class="btn ghost small" data-ret="${l.id}">Mark returned</button>` : ""}</td>` : ""}</tr>`; }).join("")}</table></div>`;
+        : l.status === "Borrowed" ? `<button class="btn ghost small" data-ret="${l.id}">Mark returned</button>` : ""}</td>` : ""}</tr>`;
+  }).join("")}</table></div>`;
 }
 
 function adminLoans(u) {
@@ -470,8 +467,8 @@ function meLoans(u) {
     $("#mlt").innerHTML = rows.length ? `<div class="tbl"><table>
       <tr><th>Book</th><th>Category</th><th>Requested</th><th>Due date</th><th>Status</th><th>Action</th></tr>
       ${rows.map(l => {
-        const b = book(l.bookId);
-        return `<tr>
+      const b = book(l.bookId);
+      return `<tr>
           <td><b>${esc(b?.title || "—")}</b>${b ? `<small>${esc(b.author)}</small>` : ""}</td>
           <td>${esc(b?.category || "—")}</td>
           <td>${l.requested}</td>
@@ -481,7 +478,7 @@ function meLoans(u) {
             ${b ? `<button type="button" class="btn ghost small" data-read="${b.id}">${AI.read} Read</button>` : "—"}
           </td>
         </tr>`;
-      }).join("")}
+    }).join("")}
     </table></div>` : `<div class="card empty">No loans to show in this category.</div>`;
 
     document.querySelectorAll("[data-read]").forEach(btn => btn.onclick = () => openReader(btn.dataset.read));
