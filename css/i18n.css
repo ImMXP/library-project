@@ -1,0 +1,39 @@
+/* UniLib – Arabic / English switch (works with js/i18n.js). style.css is not changed;
+   everything for Arabic is scoped under html[dir=rtl]. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");
+
+/* language toggle in the top strip */
+.lang-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;background:none;border-radius:4px;padding:2px 8px;font:inherit;font-size:11.5px;font-weight:600;color:#1c8354;cursor:pointer}
+.lang-btn:hover{border-color:#d5e8dc;background:#eef7f1}
+.lang-btn:focus-visible{outline:2px solid #1c8354;outline-offset:1px}
+.gp .lang-btn svg{width:14px;height:14px}
+.lang-btn span[lang=ar]{font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif}
+
+/* Arabic font */
+html[dir=rtl] body,html[dir=rtl] .gp{font-family:"IBM Plex Sans Arabic","IBM Plex Sans","Segoe UI",Tahoma,Arial,sans-serif}
+
+/* arrows and chevrons point the other way */
+html[dir=rtl] .gp-btn svg,html[dir=rtl] .adm-crumb svg,html[dir=rtl] .stat-go svg,html[dir=rtl] .att-more svg{transform:scaleX(-1)}
+
+/* text alignment + spacing that style.css sets for left-to-right */
+html[dir=rtl] th,html[dir=rtl] td{text-align:right}
+html[dir=rtl] .adm td.actions{text-align:left}
+html[dir=rtl] .adm td.actions .btn+.btn{margin-left:0;margin-right:6px}
+html[dir=rtl] .adm .stat{text-align:right}
+html[dir=rtl] .stat-go{margin-left:0;margin-right:auto}
+html[dir=rtl] .adm .gp-link{margin-left:0;margin-right:4px}
+html[dir=rtl] .adm-search svg{left:auto;right:11px}
+html[dir=rtl] .adm .bar .adm-search input{padding-left:11px;padding-right:34px}
+html[dir=rtl] .adm .book .cover small{right:auto;left:8px}
+
+/* Arabic letters must not be spaced or upper-cased */
+html[dir=rtl] .adm th,html[dir=rtl] .adm .book .cover small{letter-spacing:0;text-transform:none}
+
+/* usernames, passwords, ISBNs, emails and phones are typed left-to-right */
+html[dir=rtl] #u,html[dir=rtl] #p,html[dir=rtl] input[type=email],html[dir=rtl] input[type=tel],html[dir=rtl] input[name=isbn],html[dir=rtl] input[name=pdfUrl]{direction:ltr;text-align:right}
+
+/* English book titles / names keep their own direction inside Arabic pages */
+html[dir=rtl] .adm .book .t,html[dir=rtl] .adm .book .a,html[dir=rtl] .adm td b,html[dir=rtl] .adm td small,html[dir=rtl] .att-t b,html[dir=rtl] .adm-id b,html[dir=rtl] .reader-head h3{unicode-bidi:plaintext;text-align:right}
+
+/* Arabic font is a little taller – stop the tab bar from showing a scrollbar */
+html[dir=rtl] .adm-tabs{overflow-y:hidden}
